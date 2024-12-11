@@ -31,12 +31,12 @@ class DocumentClassifierView(APIView):
             return Response({"error": "No file provided"}, status=status.HTTP_400_BAD_REQUEST)
 
           # Ensure the directory exists
-        upload_dir = "document_classifier/uploads"
+        upload_dir = "uploads/"
         os.makedirs(upload_dir, exist_ok=True)
 
 
         # Save the file temporarily
-        save_path = f"document_classifier/uploads/{file.name}"
+        save_path = f"uploads/{file.name}"
         with open(save_path, 'wb') as f:
             for chunk in file.chunks():
                 f.write(chunk)
@@ -98,20 +98,38 @@ class BulkVerifyViewZip(APIView):
         }, status=status.HTTP_200_OK)     
         
 
-# class BulkVerifyFileView(APIView):
-#      def post(self, request):
-#         serializer =BulkUploadSerializer(data=request.data)
-#         if not serializer.is_valid():
-#             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+class BulkVerifyFileView(APIView):
+      def post(self, request):
+        start_time = time.time()
+        
+        # Get the uploaded files from the request
+        uploaded_files = request.FILES.getlist('files')  # This will give you a list of files
+        
+        if not uploaded_files:
+            return Response({"error": "No files provided"}, status=status.HTTP_400_BAD_REQUEST)
 
-
-#         results = []
-
-#         for file in files:
-#             # Save the file temporarily or process directly in memory
-#             results.append(process_single_document(file))
-
-#         return Response({
-#             "total_files": len(files),
-#             "results": results
-#         }, status=status.HTTP_200_OK)
+        results = []
+        
+        for file in uploaded_files:
+            try:
+                # Assuming classify_document is a function that processes the image
+                class_name, confidence_score = classify_document(file)
+                results.append({
+                    "file_name": file.name,
+                    "class": class_name,
+                    "confidence_score": confidence_score
+                })
+            except Exception as e:
+                results.append({
+                    "file_name": file.name,
+                    "error": str(e)
+                })
+        
+        end_time = time.time()
+        
+        # Return the results with processing time
+        return Response({
+            "processing_time": end_time - start_time,
+            "total_files": len(uploaded_files),
+            "results": results
+        }, status=status.HTTP_200_OK)
