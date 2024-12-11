@@ -1,0 +1,6 @@
+0 Pan
+1 Aadhar
+2 Gate Score Card
+3 Fail
+4 Aadhar Front
+5 Aadhar Back
