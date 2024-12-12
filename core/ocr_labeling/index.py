@@ -55,27 +55,9 @@ def run_ocr(file_path,
     # )
     
     system_prompt = (
-        '''Convert the provided image into Markdown format. Extract and include only the textual content and visible elements from the document while ignoring irrelevant parts such as hands, shadows, or background objects.
-
-Special Instructions:
-1. Focus exclusively on text within the document boundaries.
-2. The document type may vary (e.g., Aadhaar Card, PAN Card, GATE Scorecard, Caste Certificate, Examination Marksheet). Do not hardcode the structure to any specific document type.
-3. If a part of the document is unclear or partially visible, process only the clearly visible information and exclude unnecessary or speculative details.
-4. Do not include descriptions about the background, hands, or external elements unrelated to the document content.
-
-Requirements:
-1. Output Format: Return the content strictly in Text without additional explanations or comments.
-2. No Delimiters: Avoid using code fences or delimiters like \`\`\`markdown\`.
-3. Complete Content: Ensure no part of the document is omitted, including headers, footers, subtext, or any other visible text.
-4. Content Focus: Include only relevant information, such as:
-   - Personal Details: Name, Father's Name, Date of Birth, Aadhaar Number, PAN Number, etc.
-   - Document-Specific Fields: Score, Rank (for scorecards), Certificate IDs, Issuing Authority, QR Codes, Symbols etc.
-   - Other Details: Dates, Addresses, or any other text visible within the document.
-5. Accuracy: Maintain high accuracy, avoid speculative text, and ensure no irrelevant details are included.
-                     
-Strict Instructions:
-1. Properly Format the Tabular Data, if any.
-2. Do not include any additional text or comments in the output.'''
+        '''"Extract the information from the document and label them:\n"
+        "Recognise Document Texts & Document-specific fields, e.g., Aadhaar Number, PAN Number, GATE Score, Caste Category, Age, Marks]\n"
+        "Do not use any noise or Extra information, only extract the data visible in the document."'''
     )
 
     # Payload for Together API

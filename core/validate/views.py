@@ -9,57 +9,69 @@ from document_classifier.ml.classify import classify_document
 from ocr_labeling.index import run_ocr, run_ollama
 from validate.llm import run_openai
 
+
 from pdf2image import convert_from_path
 import os
 
 
 class VerifyView(APIView):
     def post(self, request):
-        file = request.FILES.get('file')
+        file = request.FILES.get('file')  # Get the single file uploaded with the 'file' key
         if not file:
-            return Response({"error": "Invalid Inputs"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": "No file provided"}, status=status.HTTP_400_BAD_REQUEST)
 
-          # Ensure the directory exists
-        upload_dir = "verified/"
-        os.makedirs(upload_dir, exist_ok=True)
-        
-        # Save the file temporarily
-        save_path = f"verified/{file.name}"
-        with open(save_path, 'wb') as f:
-            for chunk in file.chunks():
-                f.write(chunk)
-                
         try:
-            document_class, confidence_score = classify_document(save_path)
-            if float(confidence_score) < 0.75:
-                if os.path.exists(save_path):
-                    os.remove(save_path)
+            # Define upload directory based on file type
+            upload_dir = "media/pdf/" if file.name.endswith('.pdf') else "media/images/"
+            os.makedirs(upload_dir, exist_ok=True)
+            save_path = os.path.join(upload_dir, file.name)
+
+            # Save the file temporarily
+            with open(save_path, 'wb') as f:
+                for chunk in file.chunks():
+                    f.write(chunk)
+
+            if file.name.endswith('.pdf'):
+                # Convert PDF to a single image
+                image_path = os.path.join("media/images/", f"{os.path.splitext(file.name)[0]}.jpg")
+                images = convert_from_path(save_path, dpi=300) 
+                images[0].save(image_path, 'JPEG')
+
+                # Process the image (example: classify and run OCR)
+                document_class, confidence_score = classify_document(image_path)
+                ocr_text = run_ocr(image_path)
+
                 return Response({
-                    "class": "Invalid",
+                    "file_name": file.name,
+                    "class": document_class,
+                    "confidence_score": confidence_score,
+                    "ocr_text": ocr_text,
+                    "file_path": image_path
+                }, status=status.HTTP_200_OK)
+
+            else:
+                # Process non-PDF files directly
+                document_class, confidence_score = classify_document(save_path)
+                ocr_text = run_ocr(save_path)
+
+                return Response({
+                    "file_name": file.name,
+                    "class": document_class,
+                    "confidence_score": confidence_score,
+                    "ocr_text": ocr_text,
                     "file_path": save_path
                 }, status=status.HTTP_200_OK)
-                
-            ocr_data = run_ocr(save_path)
-            ollama_output = run_ollama(ocr_data)
-            
-            print(ollama_output)
-            
-            # actual_input = Application.objects.get(id=id)
-            
-            return Response({
-                "class": document_class,
-                "ocr_data": ocr_data,
-                "ollama_output": ollama_output,
-                "file_path": save_path
-            }, status=status.HTTP_200_OK)
-            
-            
-        
+
         except Exception as e:
-            # Cleanup on failure
-            if os.path.exists(save_path):
-                os.remove(save_path)
-            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            # Handle any errors that occur during processing
+            return Response({
+                "file_name": file.name,
+                "error": str(e)
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+      
+            
+            
+            
 
 
 
