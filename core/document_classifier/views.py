@@ -114,6 +114,12 @@ class BulkVerifyFileView(APIView):
             try:
                 # Assuming classify_document is a function that processes the image
                 class_name, confidence_score = classify_document(file)
+                if float(confidence_score) < 0.75:
+                    results.append({
+                    "file_name": file.name,
+                    "class": "Invalid",
+                    "confidence_score": confidence_score
+                })                        
                 results.append({
                     "file_name": file.name,
                     "class": class_name,

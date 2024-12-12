@@ -22,5 +22,6 @@ urlpatterns = [
     # path('auth/', include('user.urls')),
     path('api/', include('api.urls')),
     path('verify/', include('document_classifier.urls')),
-    # path('validate/', include('validate.urls')),
+    path('validate/', include('ocr_labeling.urls')),
+    path('final/', include('validate.urls')),
 ]
