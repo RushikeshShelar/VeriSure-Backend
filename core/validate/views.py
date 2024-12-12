@@ -8,6 +8,7 @@ from PyPDF2 import PdfReader
 from document_classifier.ml.classify import classify_document
 from ocr_labeling.index import run_ocr, run_ollama
 from validate.llm import run_openai
+# from models.index import run_ocr
 
 
 from pdf2image import convert_from_path
